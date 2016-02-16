@@ -5,12 +5,11 @@ const cosmic_fl = "../data/CosmicCompleteExport.tsv"
 const data_dir = "../data"
 
 function heredgenes()
-    s = Set(readcsv("data/58gene.csv",ASCIIString))
+    s = Set(readcsv("../data/58gene.csv",ASCIIString))
     push!(s,"BRCA1")
     push!(s,"BRCA2")
     s
 end
-
 
 const panel_fl = "/home/guo/haplox/Bone/data/panel/Cancer_gene.list"
 
@@ -107,7 +106,7 @@ end
 function genesforcancer(cancer)
     gene_samples = Dict{ASCIIString,Dict{ASCIIString,Bool}}()
     samples = Set{ASCIIString}()
-    #hdgenes = heredgenes()
+    hdgenes = heredgenes()
     pnlgenes = genespanel()
     open(cosmic_fl) do file
         header = readline(file)
@@ -126,7 +125,7 @@ function genesforcancer(cancer)
             if contains(gene,"_")
                 gene = convert(ASCIIString, split(gene,"_")[1])
             end
-            if !in(gene, pnlgenes)
+            if in(gene,hdgenes) || !in(gene, pnlgenes)
                 continue
             end
             mut = length(row[17]) != 0
@@ -160,8 +159,8 @@ function genesforcancer(cancer)
     lens  = repmat([len],size(data,1),1)
     =#
     
-    header = ["Gene name","The number of muated samples",
-              "The total number of samples in $cancer","mutation rates"]
+    header = ["Gene name","The number of muated samples ",
+              "The total number of samples","mutation rates"]
     
     data = hcat(genes, nummuts, numsamples, ratios)
     data = sortrows(data,by=x->(x[3],x[2]),rev=true)
@@ -173,6 +172,7 @@ end
 function genesampleofeachcancer()
     cancers = cancernames()
     pmap(genesforcancer, cancers)
+    #run(`zip ../data/StarGene.zip ../data/*.csv`)
 end
 
 
